@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>⚡ Smart Energy Bill Calculator</title>
+<style>
+body {
+  font-family: "Poppins", sans-serif;
+  background: linear-gradient(135deg, #d0f0ff, #fffaf0);
+  color: #222;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+header {
+  background: linear-gradient(90deg, #0066ff, #00c4ff);
+  color: white;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+}
+header h1 {
+  margin: 0;
+  font-size: 28px;
+}
+.container {
+  max-width: 900px;
+  margin: 20px auto;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+  padding: 20px;
+}
+.device-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+  align-items: center;
+  transition: 0.3s;
+}
+.device-row:hover { background: #f9fbff; border-radius: 10px; }
+.device-row select, .device-row input {
+  padding: 8px;
+  font-size: 15px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  flex: 1;
+  transition: 0.3s;
+}
+.device-row input:focus, .device-row select:focus {
+  border-color: #00b7ff;
+  box-shadow: 0 0 5px #a3ecff;
+}
+button {
+  padding: 10px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  transition: 0.3s;
+}
+button:hover { transform: scale(1.05); }
+#addDevice { background:#28a745; color:white; }
+#calculate { background:#007bff; color:white; }
+#reset { background:#ff4757; color:white; }
+.remove-btn { background:#ffdddd; border:1px solid #f5a7a7; color:#333; }
+
+.cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 20px;
+}
+.card {
+  background:#fdfdfd;
+  border-radius:12px;
+  padding:16px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.1);
+  transition:0.3s;
+}
+.card:hover { transform:translateY(-3px); }
+
+.suggestions {
+  margin-top: 10px;
+}
+.suggestions h4 { color: #0066ff; }
+.small {
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 10px;
+}
+.controls {
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:16px;
+}
+
+.awareness {
+  margin-top: 30px;
+  background: #e3f9e5;
+  padding: 16px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.awareness img {
+  width: 70px;
+  height: 70px;
+}
+.awareness p {
+  margin: 0;
+  font-weight: 500;
+  color: #1d741d;
+}
+
+@keyframes glow {
+  from { box-shadow: 0 0 5px #00c4ff; }
+  to { box-shadow: 0 0 20px #00c4ff; }
+}
+.active-input { animation: glow 0.7s alternate infinite; }
+
+@media(max-width:700px) {
+  .cards { grid-template-columns:1fr; }
+  header h1 { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>⚡ Smart Energy Bill Calculator</h1>
+  <p>Track your household energy usage and learn how to save electricity 🌱</p>
+</header>
+
+<div class="container">
+  <p class="small">Select or type appliances and their daily usage hours. Click <strong>Calculate</strong> to view your bill and saving tips.</p>
+  <div id="devices"></div>
+
+  <div class="controls">
+    <button id="addDevice">+ Add Appliance</button>
+    <button id="calculate">Calculate</button>
+    <button id="reset">Reset</button>
+  </div>
+
+  <div class="cards" id="resultsArea" style="display:none;">
+    <div class="card" id="deviceDetails">
+      <h3>📊 Appliance-wise Energy & Cost</h3>
+      <div id="deviceList"></div>
+    </div>
+    <div class="card" id="summary">
+      <h3>💡 Summary & Suggestions</h3>
+      <div id="summaryContent"></div>
+      <div class="suggestions" id="suggestions"></div>
+    </div>
+  </div>
+
+  <div class="awareness">
+    <img src="https://cdn-icons-png.flaticon.com/512/1161/1161793.png" alt="Save Electricity">
+    <p>Turn off lights & appliances when not in use. Every unit saved is a step toward a greener planet! 🌍</p>
+  </div>
+</div>
+
+<script>
+// ---------- Appliance wattages ----------
+const applianceWatts = {
+  "Fan": 75,
+  "Tube Light": 40,
+  "LED Bulb": 10,
+  "Air Conditioner": 1200,
+  "Refrigerator": 150,
+  "Laptop": 60,
+  "TV": 120,
+  "Washing Machine": 500,
+  "Microwave": 1000,
+  "Iron": 800,
+  "Water Heater": 1500
+};
+
+// ---------- Electricity slabs ----------
+const slabLimits = [30, 75, 125, 225, 400];
+
+// ---------- Calculate bill ----------
+function calculateBill(units) {
+  const slabs = [
+    [30, 1.90],
+    [45, 3.00],
+    [50, 4.50],
+    [100, 6.00],
+    [175, 8.75],
+    [Infinity, 9.75]
+  ];
+  let total = 0, remaining = units;
+  for (const [limit, rate] of slabs) {
+    const use = Math.min(remaining, limit);
+    if (use <= 0) break;
+    total += use * rate;
+    remaining -= use;
+    if (remaining <= 0) break;
+  }
+  return total;
+}
+
+// ---------- Suggest reductions ----------
+function suggestReductions(devices, totalUnits, targetUnits) {
+  let excess = totalUnits - targetUnits;
+  if (excess <= 0) return ["Already within target! Great job 👏"];
+  const sorted = devices.slice().sort(
+    (a, b) => ((b.power / 1000) * b.hrs * 30) - ((a.power / 1000) * a.hrs * 30)
+  );
+  const suggestions = [];
+  for (const d of sorted) {
+    if (excess <= 0) break;
+    const monthlyUnits = (d.power / 1000) * d.hrs * 30;
+    const reduce = Math.min(monthlyUnits, excess);
+    const newHrs = ((monthlyUnits - reduce) / (d.power / 1000)) / 30;
+    suggestions.push(`🔋 Reduce <strong>${d.name}</strong> usage to <strong>${newHrs.toFixed(1)} hrs/day</strong> to save ~${reduce.toFixed(1)} units`);
+    excess -= reduce;
+  }
+  return suggestions;
+}
+
+// ---------- Generate slab suggestions ----------
+function generateSlabSuggestions(devices, totalUnits) {
+  const crossed = slabLimits.filter(limit => totalUnits > limit);
+  let html = "";
+  if (crossed.length === 0) {
+    html += `<p>✅ Great! Your consumption is within the lowest slab (0–30 units).</p>`;
+  } else {
+    html += `<p>⚡ You have crossed <strong>${crossed.length}</strong> slabs (up to ${crossed[crossed.length - 1]} units).</p>`;
+    crossed.reverse().forEach(slab => {
+      const tips = suggestReductions(devices, totalUnits, slab);
+      const newBill = calculateBill(slab);
+      html += `
+        <h4>Suggestions to reduce to ≤ ${slab} units:</h4>
+        <ul>${tips.map(t => `<li>${t}</li>`).join('')}</ul>
+        <p><em>💰 Estimated bill if reduced: ₹${newBill.toFixed(2)}</em></p>
+      `;
+    });
+  }
+  return html;
+}
+
+// ---------- UI Handling ----------
+const devicesDiv = document.getElementById('devices');
+const addBtn = document.getElementById('addDevice');
+const calcBtn = document.getElementById('calculate');
+const resetBtn = document.getElementById('reset');
+const resultsArea = document.getElementById('resultsArea');
+
+function estimateWatts(name) {
+  name = name.toLowerCase();
+  for (let app in applianceWatts) {
+    if (name.includes(app.toLowerCase())) return applianceWatts[app];
+  }
+  // fallback guess if not found
+  return 100; 
+}
+
+function createDeviceRow(selected='') {
+  const row = document.createElement('div');
+  row.className = 'device-row';
+  let options = `<option value="">Select Appliance</option>`;
+  for (const app in applianceWatts) {
+    options += `<option value="${app}" ${app===selected?'selected':''}>${app}</option>`;
+  }
+  row.innerHTML = `
+    <select class="dev-name">${options}</select>
+    <input type="text" placeholder="Or type appliance name" class="dev-custom" />
+    <input type="number" placeholder="Power (W)" class="dev-power" step="any" value="">
+    <input type="number" placeholder="Hours/day" class="dev-hrs" step="any" value="">
+    <button class="remove-btn">Remove</button>
+  `;
+  const select = row.querySelector('.dev-name');
+  const custom = row.querySelector('.dev-custom');
+  const powerInput = row.querySelector('.dev-power');
+  row.querySelector('.remove-btn').addEventListener('click', () => row.remove());
+
+  select.addEventListener('change', () => {
+    powerInput.value = applianceWatts[select.value] || '';
+  });
+  custom.addEventListener('input', () => {
+    const name = custom.value.trim();
+    if (name) {
+      powerInput.value = estimateWatts(name);
+      custom.classList.add('active-input');
+    } else {
+      custom.classList.remove('active-input');
+    }
+  });
+
+  devicesDiv.appendChild(row);
+}
+
+addBtn.addEventListener('click', () => createDeviceRow());
+resetBtn.addEventListener('click', () => { devicesDiv.innerHTML=''; resultsArea.style.display='none'; });
+calcBtn.addEventListener('click', () => {
+  const devices = Array.from(devicesDiv.querySelectorAll('.device-row')).map(r => {
+    const dropdownName = r.querySelector('.dev-name').value;
+    const customName = r.querySelector('.dev-custom').value.trim();
+    const name = dropdownName || customName || 'Unnamed Device';
+    return {
+      name,
+      power: parseFloat(r.querySelector('.dev-power').value) || estimateWatts(name),
+      hrs: parseFloat(r.querySelector('.dev-hrs').value) || 0
+    };
+  });
+  if (devices.length === 0) { alert('Add at least one appliance.'); return; }
+
+  let totalUnits = 0;
+  let deviceDetailsHTML = '';
+  devices.forEach(d => {
+    const monthlyUnits = (d.power / 1000) * d.hrs * 30;
+    totalUnits += monthlyUnits;
+    const cost = calculateBill(monthlyUnits);
+    deviceDetailsHTML += `<div><strong>${d.name}</strong>: ${monthlyUnits.toFixed(2)} units, ₹${cost.toFixed(2)}</div>`;
+  });
+
+  const totalCost = calculateBill(totalUnits);
+  document.getElementById('deviceList').innerHTML = deviceDetailsHTML;
+  document.getElementById('summaryContent').innerHTML = `
+    <p><strong>Total Monthly Units:</strong> ${totalUnits.toFixed(2)}</p>
+    <p><strong>Estimated Bill:</strong> ₹${totalCost.toFixed(2)}</p>
+  `;
+  const suggestionsHTML = generateSlabSuggestions(devices, totalUnits);
+  document.getElementById('suggestions').innerHTML = suggestionsHTML;
+  resultsArea.style.display = 'grid';
+});
+
+// Initial Row
+createDeviceRow();
+</script>
+</body>
+</html>
