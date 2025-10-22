@@ -1,357 +1,205 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Smart Energy Bill Calculator ⚡</title>
-
-<!-- Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-
-<style>
-body {
-  font-family: "Poppins", sans-serif;
-  margin: 0;
-  background: linear-gradient(135deg, #90f7ec, #32ccbc);
-  color: #222;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-header {
-  text-align: center;
-  padding: 30px 10px;
-  color: #fff;
-}
-header h1 {
-  margin: 0;
-  font-size: 32px;
-  text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
-}
-header p { margin-top: 8px; font-size: 15px; }
-
-.container {
-  max-width: 900px;
-  margin: 20px auto 50px;
-  background: rgba(255,255,255,0.95);
-  border-radius: 20px;
-  padding: 25px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-  backdrop-filter: blur(10px);
-}
-
-.device-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
-  align-items: center;
-  transition: 0.3s;
-}
-.device-row:hover { background: #f8fcff; border-radius: 12px; }
-
-.device-row select, .device-row input {
-  padding: 10px;
-  font-size: 15px;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  flex: 1;
-  transition: 0.25s;
-  background: #fff;
-}
-.device-row input:focus, .device-row select:focus {
-  border-color: #00bcd4;
-  box-shadow: 0 0 6px #99f1ff;
-}
-
-button {
-  padding: 10px 16px;
-  font-size: 15px;
-  cursor: pointer;
-  border: none;
-  border-radius: 10px;
-  transition: all 0.3s ease;
-  color: white;
-}
-button:hover { transform: scale(1.05); }
-#addDevice { background:#28a745; }
-#calculate { background:#007bff; }
-#reset { background:#ff4757; }
-.remove-btn { background:#fcecec; color:#333; border:1px solid #ffb0b0; }
-
-.cards {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px;
-  margin-top: 25px;
-}
-.card {
-  background:#fff;
-  border-radius:16px;
-  padding:18px;
-  box-shadow:0 5px 20px rgba(0,0,0,0.1);
-  transition:0.3s;
-}
-.card:hover { transform:translateY(-5px); }
-
-h3 { color:#007bff; }
-.suggestions h4 { color:#00bcd4; }
-
-.controls {
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-  margin-top:16px;
-}
-
-.awareness {
-  margin-top: 30px;
-  background: linear-gradient(90deg, #fafff6, #e8ffe9);
-  padding: 16px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
-}
-.awareness img { width: 60px; height: 60px; }
-.awareness p {
-  margin: 0;
-  font-weight: 500;
-  color: #1a7f1a;
-}
-
-input:disabled, select:disabled { background: #f4f4f4; }
-
-@media(max-width:700px) {
-  .cards { grid-template-columns:1fr; }
-  header h1 { font-size: 26px; }
-}
-</style>
+  <meta charset="UTF-8">
+  <title>⚡ Smart Energy Bill Calculator (Offline)</title>
+  <style>
+    body {font-family: 'Segoe UI', sans-serif; margin: 20px; background: #0d1117; color: #f0f6fc;}
+    h3 {color: #58a6ff;}
+    .card {background: #161b22; padding: 16px; border-radius: 10px; margin-bottom: 12px;}
+    .primary {background: #238636; border: none; color: white; padding: 8px 14px; border-radius: 8px; cursor: pointer;}
+    .danger {background: #da3633; border: none; color: white; padding: 8px 14px; border-radius: 8px; cursor: pointer;}
+    select, input {padding: 6px; border-radius: 6px; border: 1px solid #30363d; background: #0d1117; color: #f0f6fc;}
+    .badge {background:#30363d; padding:4px 8px; border-radius:6px;}
+    .tips {background:#21262d; padding:8px; border-radius:8px; font-size:14px;}
+    .msg-bot {background:#21262d; padding:8px; border-radius:8px; margin:4px 0;}
+    #aiSection {position:fixed; bottom:20px; right:20px; width:300px; background:#161b22; padding:12px; border-radius:12px; display:none;}
+    #aiInput {width:80%; padding:6px; border-radius:8px; border:1px solid #30363d;}
+  </style>
 </head>
-
 <body>
-<header>
-  <h1>⚡ Smart Energy Bill Calculator</h1>
-  <p>Estimate your energy usage & get saving tips instantly 🌱</p>
-</header>
 
-<div class="container">
-  <p><strong>Tip:</strong> Choose an appliance from the list <em>or</em> type your own. Enter daily usage hours and click Calculate.</p>
+<h2>⚡ Smart Energy Bill Calculator (Offline)</h2>
 
-  <div id="devices"></div>
+<label id="lblLang">Language</label>
+<select id="selLang">
+  <option value="en">English</option>
+  <option value="hi">हिन्दी</option>
+  <option value="te">తెలుగు</option>
+  <option value="ta">தமிழ்</option>
+  <option value="kn">ಕನ್ನಡ</option>
+  <option value="ml">മലയാളം</option>
+  <option value="mr">मराठी</option>
+  <option value="bn">বাংলা</option>
+  <option value="gu">ગુજરાતી</option>
+  <option value="pa">ਪੰਜਾਬੀ</option>
+</select>
 
-  <div class="controls">
-    <button id="addDevice">+ Add Appliance</button>
-    <button id="calculate">Calculate</button>
-    <button id="reset">Reset</button>
-  </div>
+<label id="lblRegion">Region</label>
+<select id="selRegion">
+  <option value="ap">Andhra Pradesh</option>
+  <option value="tg">Telangana</option>
+  <option value="tn">Tamil Nadu</option>
+  <option value="mh">Maharashtra</option>
+  <option value="ka">Karnataka</option>
+  <option value="kl">Kerala</option>
+  <option value="gj">Gujarat</option>
+  <option value="dl">Delhi</option>
+  <option value="wb">West Bengal</option>
+  <option value="generic">Generic India</option>
+</select>
 
-  <div class="cards" id="resultsArea" style="display:none;">
-    <div class="card" id="deviceDetails">
-      <h3>📊 Appliance-wise Energy & Cost</h3>
-      <div id="deviceList"></div>
-    </div>
-    <div class="card" id="summary">
-      <h3>💡 Summary & Suggestions</h3>
-      <div id="summaryContent"></div>
-      <div class="suggestions" id="suggestions"></div>
-    </div>
-  </div>
+<div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+  <div class="badge" id="langBadge">EN</div>
+  <button id="openAI" class="primary">Assistant</button>
+</div>
 
-  <div class="awareness">
-    <img src="https://cdn-icons-png.flaticon.com/512/1161/1161793.png" alt="Save">
-    <p>⚠️ Switch off fans, lights, and TVs when not in use — save power, save earth 🌍</p>
+<br>
+
+<button id="btnAdd" class="primary">+ Add Appliance</button>
+<button id="btnCalculate" class="primary">Calculate</button>
+<button id="btnReset" class="danger">Reset</button>
+
+<div class="card">
+  <h3 id="applianceTitle">Appliance-wise Energy & Cost</h3>
+  <div id="applianceList"></div>
+</div>
+
+<div class="card">
+  <h3 id="summaryTitle">💡 Summary & Suggestions</h3>
+  <div id="summaryBox"></div>
+  <div id="suggestBox" style="margin-top:8px;"></div>
+  <div id="tipsBox" class="tips"></div>
+</div>
+
+<!-- Awareness -->
+<div style="display:flex; align-items:center; gap:10px; margin-top:12px;">
+  <img src="https://cdn-icons-png.flaticon.com/512/2913/2913465.png" width="50" alt="save"/>
+  <div>
+    <div style="font-weight:700">Save Electricity — Save Earth</div>
+    <div class="small">Turn off unused devices and prefer energy-efficient appliances.</div>
   </div>
 </div>
 
+<!-- AI Chat Section -->
+<div id="aiSection">
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <div id="aiTitle">Energy Assistant</div>
+    <div style="cursor:pointer;" id="aiClose">✖</div>
+  </div>
+  <div class="msg-bot" id="aiWelcome">Hello — ask me about tariff slabs, energy saving, or your bill calculation.</div>
+  <input id="aiInput" placeholder="Ask (e.g. 'What are Telangana slabs?')" />
+  <button id="aiSend" class="primary">Send</button>
+</div>
+
 <script>
-// ---------- Appliance wattages ----------
-const applianceWatts = {
-  "Fan": 75,
-  "Tube Light": 40,
-  "LED Bulb": 10,
-  "Air Conditioner": 1200,
-  "Refrigerator": 150,
-  "Laptop": 60,
-  "TV": 120,
-  "Washing Machine": 500,
-  "Microwave": 1000,
-  "Iron": 800,
-  "Water Heater": 1500
+let appliances = [];
+
+const slabs = {
+  generic: [50, 125, 250],
+  ap: [50, 100, 200, 400],
+  tg: [50, 100, 200, 400],
+  tn: [100, 200, 500],
+  mh: [100, 300, 500],
+  ka: [50, 100, 200, 400],
+  kl: [50, 100, 250],
+  gj: [50, 100, 250],
+  dl: [100, 200, 400],
+  wb: [75, 150, 300]
 };
 
-// ---------- Keyword-based watt estimation ----------
-function estimateWatts(name) {
-  name = name.toLowerCase();
-  if (name.includes("ac") || name.includes("air")) return 1200;
-  if (name.includes("heater") || name.includes("geyser")) return 1500;
-  if (name.includes("fan")) return 75;
-  if (name.includes("light") || name.includes("bulb")) return 15;
-  if (name.includes("tv")) return 120;
-  if (name.includes("computer") || name.includes("laptop")) return 60;
-  if (name.includes("iron")) return 800;
-  if (name.includes("pump")) return 500;
-  if (name.includes("fridge") || name.includes("refrigerator")) return 150;
-  if (name.includes("oven") || name.includes("microwave")) return 1000;
-  if (name.includes("machine")) return 500;
-  return 150; // fallback realistic default
-}
-
-// ---------- Electricity slab calculation ----------
-function calculateBill(units) {
-  const slabs = [
-    [30, 1.90],
-    [45, 3.00],
-    [50, 4.50],
-    [100, 6.00],
-    [175, 8.75],
-    [Infinity, 9.75]
-  ];
-  let total = 0, remaining = units;
-  for (const [limit, rate] of slabs) {
-    const use = Math.min(remaining, limit);
-    total += use * rate;
-    remaining -= use;
-    if (remaining <= 0) break;
-  }
-  return total;
-}
-
-// ---------- Slab limits ----------
-const slabLimits = [30, 75, 125, 225, 400];
-
-// ---------- Suggest reduction ----------
-function suggestReductions(devices, totalUnits, targetUnits) {
-  let excess = totalUnits - targetUnits;
-  if (excess <= 0) return ["✅ Already within target!"];
-  const sorted = devices.slice().sort((a, b) => ((b.power*b.hrs) - (a.power*a.hrs)));
-  const suggestions = [];
-  for (const d of sorted) {
-    if (excess <= 0) break;
-    const monthlyUnits = (d.power / 1000) * d.hrs * 30;
-    const reduce = Math.min(monthlyUnits, excess);
-    const newHrs = ((monthlyUnits - reduce) / (d.power / 1000)) / 30;
-    suggestions.push(`Reduce <b>${d.name}</b> usage to <b>${newHrs.toFixed(1)} hrs/day</b> to save ~${reduce.toFixed(1)} units.`);
-    excess -= reduce;
-  }
-  return suggestions;
-}
-
-// ---------- Generate slab insights ----------
-function generateSlabSuggestions(devices, totalUnits) {
-  const crossed = slabLimits.filter(limit => totalUnits > limit);
-  let html = "";
-  if (crossed.length === 0) {
-    html += `<p>👏 Excellent! You’re within the lowest consumption slab.</p>`;
-  } else {
-    html += `<p>⚡ You’ve crossed <b>${crossed.length}</b> slabs (up to ${crossed.at(-1)} units).</p>`;
-    crossed.reverse().forEach(slab => {
-      const tips = suggestReductions(devices, totalUnits, slab);
-      const newBill = calculateBill(slab);
-      html += `
-        <h4>To reduce to ≤ ${slab} units:</h4>
-        <ul>${tips.map(t => `<li>${t}</li>`).join('')}</ul>
-        <p><em>💰 New Bill ≈ ₹${newBill.toFixed(2)}</em></p>
-      `;
-    });
-  }
-  return html;
-}
-
-// ---------- UI Handling ----------
-const devicesDiv = document.getElementById('devices');
-const addBtn = document.getElementById('addDevice');
-const calcBtn = document.getElementById('calculate');
-const resetBtn = document.getElementById('reset');
-const resultsArea = document.getElementById('resultsArea');
-
-// Create device input row
-function createDeviceRow(selected='') {
-  const row = document.createElement('div');
-  row.className = 'device-row';
-  let options = `<option value="">Select Appliance</option>`;
-  for (const app in applianceWatts) {
-    options += `<option value="${app}">${app}</option>`;
-  }
-  row.innerHTML = `
-    <select class="dev-name">${options}</select>
-    <input type="text" placeholder="Or type appliance name" class="dev-custom" />
-    <input type="number" placeholder="Power (W)" class="dev-power" step="any">
-    <input type="number" placeholder="Hours/day" class="dev-hrs" step="any">
-    <button class="remove-btn">✖</button>
+function addAppliance() {
+  const id = Date.now();
+  const div = document.createElement('div');
+  div.innerHTML = `
+    <input id="name${id}" placeholder="Appliance name" />
+    <input id="watt${id}" type="number" placeholder="Watts" />
+    <input id="hrs${id}" type="number" placeholder="Hours/day" />
+    <input id="days${id}" type="number" placeholder="Days/month" />
+    <button onclick="removeAppliance(${id})" class="danger">X</button>
   `;
-  const select = row.querySelector('.dev-name');
-  const custom = row.querySelector('.dev-custom');
-  const powerInput = row.querySelector('.dev-power');
-  const remove = row.querySelector('.remove-btn');
-
-  remove.addEventListener('click', () => row.remove());
-
-  // Dropdown change
-  select.addEventListener('change', () => {
-    if (select.value) {
-      custom.disabled = true;
-      powerInput.value = applianceWatts[select.value];
-    } else {
-      custom.disabled = false;
-      powerInput.value = '';
-    }
-  });
-
-  // Manual entry handling
-  custom.addEventListener('input', () => {
-    if (custom.value.trim()) {
-      select.disabled = true;
-      powerInput.value = estimateWatts(custom.value);
-    } else {
-      select.disabled = false;
-      powerInput.value = '';
-    }
-  });
-
-  devicesDiv.appendChild(row);
+  document.getElementById('applianceList').appendChild(div);
 }
 
-addBtn.addEventListener('click', () => createDeviceRow());
-resetBtn.addEventListener('click', () => { devicesDiv.innerHTML=''; resultsArea.style.display='none'; });
+function removeAppliance(id){
+  const el = document.getElementById(`name${id}`)?.parentElement;
+  if (el) el.remove();
+}
 
-// Calculation
-calcBtn.addEventListener('click', () => {
-  const rows = devicesDiv.querySelectorAll('.device-row');
-  if (rows.length === 0) return alert("Add at least one appliance.");
-
-  const devices = Array.from(rows).map(r => {
-    const select = r.querySelector('.dev-name');
-    const custom = r.querySelector('.dev-custom');
-    const power = parseFloat(r.querySelector('.dev-power').value) || 0;
-    const hrs = parseFloat(r.querySelector('.dev-hrs').value) || 0;
-    const name = select.disabled ? custom.value : (select.value || "Unnamed Device");
-    return { name, power, hrs };
-  });
-
+function calculateBill() {
   let totalUnits = 0;
-  let html = "";
-  devices.forEach(d => {
-    const units = (d.power / 1000) * d.hrs * 30;
+  appliances = [];
+  document.querySelectorAll('#applianceList > div').forEach(div => {
+    const id = div.querySelector('input').id.replace('name','');
+    const watts = parseFloat(document.getElementById('watt'+id).value) || 0;
+    const hrs = parseFloat(document.getElementById('hrs'+id).value) || 0;
+    const days = parseFloat(document.getElementById('days'+id).value) || 0;
+    const units = (watts * hrs * days) / 1000;
     totalUnits += units;
-    const cost = calculateBill(units);
-    html += `<div><b>${d.name}</b>: ${units.toFixed(2)} units | ₹${cost.toFixed(2)}</div>`;
+    appliances.push({name: document.getElementById('name'+id).value || "Appliance", units});
   });
 
-  const totalCost = calculateBill(totalUnits);
-  document.getElementById('deviceList').innerHTML = html;
-  document.getElementById('summaryContent').innerHTML = `
-    <p><b>Total Monthly Units:</b> ${totalUnits.toFixed(2)}</p>
-    <p><b>Estimated Bill:</b> ₹${totalCost.toFixed(2)}</p>
-  `;
-  document.getElementById('suggestions').innerHTML = generateSlabSuggestions(devices, totalUnits);
-  resultsArea.style.display = 'grid';
-});
+  const region = document.getElementById('selRegion').value;
+  const regionSlabs = slabs[region] || slabs.generic;
+  const estBill = totalUnits * 4.43; // base avg rate
 
-// Initial row
-createDeviceRow();
+  let crossed = 0;
+  for(let s of regionSlabs){ if(totalUnits > s) crossed++; }
+
+  let summary = `<b>Total Monthly Units:</b> ${totalUnits.toFixed(2)}<br>
+  <b>Estimated Bill:</b> ₹${estBill.toFixed(2)}<br>`;
+
+  if(crossed > 1) {
+    summary += `⚡ You’ve crossed <b>${crossed} slabs</b> (up to ${regionSlabs[crossed-1]} units).<br>`;
+  } else {
+    summary += `✅ You’re within a safe usage slab.<br>`;
+  }
+
+  document.getElementById('summaryBox').innerHTML = summary;
+
+  let suggestHTML = "";
+  if (crossed >= 2) {
+    const prevSlab = regionSlabs[crossed - 1];
+    const diffUnits = (totalUnits - prevSlab).toFixed(1);
+    const reducedBill = (prevSlab * 4.43).toFixed(2);
+    suggestHTML += `
+      <b>To reduce to ≤ ${prevSlab} units:</b><br>
+      • Reduce Refrigerator usage by 2 hrs/day to save ~${(diffUnits*0.6).toFixed(1)} units.<br>
+      • Reduce Water Heater usage by 0.5 hrs/day to save ~${(diffUnits*0.3).toFixed(1)} units.<br>
+      • Reduce Fan or Light usage by 1 hr/day to save ~${(diffUnits*0.1).toFixed(1)} units.<br>
+      💰 <b>New Bill ≈ ₹${reducedBill}</b><br><br>
+    `;
+  }
+  if (crossed >= 3) {
+    const prevSlab2 = slabs[region][crossed - 2];
+    const reducedBill2 = (prevSlab2 * 4.43).toFixed(2);
+    suggestHTML += `
+      <b>To reduce to ≤ ${prevSlab2} units:</b><br>
+      • Cut Water Heater usage by 1 hr/day.<br>
+      • Use energy-efficient fans and bulbs.<br>
+      💰 <b>New Bill ≈ ₹${reducedBill2}</b>
+    `;
+  }
+
+  document.getElementById('suggestBox').innerHTML = suggestHTML;
+  document.getElementById('tipsBox').innerHTML = "💡 Tip: Try switching to LED bulbs, and use timers for water heaters to avoid unnecessary usage.";
+}
+
+document.getElementById('btnAdd').onclick = addAppliance;
+document.getElementById('btnCalculate').onclick = calculateBill;
+document.getElementById('btnReset').onclick = ()=>location.reload();
+
+document.getElementById('openAI').onclick = ()=>document.getElementById('aiSection').style.display='block';
+document.getElementById('aiClose').onclick = ()=>document.getElementById('aiSection').style.display='none';
+document.getElementById('aiSend').onclick = ()=>{
+  const q = document.getElementById('aiInput').value.toLowerCase();
+  const ansBox = document.getElementById('aiWelcome');
+  if(q.includes('slab')) ansBox.innerHTML = "Tariff slabs vary by region — e.g. Telangana: 0-50, 51-100, 101-200, 200+. Each higher slab has increased rate.";
+  else if(q.includes('save')) ansBox.innerHTML = "Switch off idle appliances, use LED lights, avoid standby power, and optimize AC/heater usage.";
+  else if(q.includes('bill')) ansBox.innerHTML = "Your bill depends on total kWh consumed per month, multiplied by regional tariff rates and slabs.";
+  else ansBox.innerHTML = "I'm your Energy Assistant — ask about slabs, savings, or bill calculation.";
+};
 </script>
+
 </body>
 </html>
